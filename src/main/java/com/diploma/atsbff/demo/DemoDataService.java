@@ -102,7 +102,7 @@ public class DemoDataService {
     public JsonNode analysisJson(AnalysisRequest request) {
         String asset = normalizeAsset(request.asset());
         BigDecimal nav = request.nav() == null ? new BigDecimal("100000") : request.nav();
-        double positionSize = nav.multiply(new BigDecimal("0.80")).doubleValue();
+        double positionSize = nav.multiply(new BigDecimal("0.16")).doubleValue();
 
         Map<String, Object> report = new LinkedHashMap<>();
         report.put("approved", true);
@@ -111,25 +111,37 @@ public class DemoDataService {
         report.put("data_source", "demo-data");
         report.put("market_state", "ranging");
         report.put("stage_results", List.of(
-                Map.of(
-                    "stage_name", "Stage 1: Market State",
-                    "passed", true,
-                    "reason", "Demo: market is classified as ranging",
-                    "data", Map.of("rsi", 54.8, "ema_12", 68120.0, "ema_26", 67880.0)
-                ),
-                Map.of(
-                    "stage_name", "Stage 2: Volatility Edge",
-                    "passed", true,
-                    "reason", "Demo: implied volatility is above realized volatility",
-                    "data", Map.of("iv_avg", 0.64, "rv_30d", 0.49, "iv_rv_spread", 0.15)
-                ),
-                Map.of(
-                    "stage_name", "Stage 3: Liquidity",
-                    "passed", true,
-                    "reason", "Demo: option chain has enough open interest",
-                    "data", Map.of("open_interest", 1450, "bid_ask_spread", 0.032)
-                )
-            ));
+            Map.of(
+                "stage_name", "Stage 1: Market State",
+                "passed", true,
+                "reason", "Demo: market is classified as ranging",
+                "data", Map.of("rsi", 54.8, "ema_12", 68120.0, "ema_26", 67880.0)
+            ),
+            Map.of(
+                "stage_name", "Stage 2: Volatility Edge",
+                "passed", true,
+                "reason", "Demo: implied volatility is above realized volatility",
+                "data", Map.of("iv_avg", 0.64, "rv_30d", 0.49, "iv_rv_spread", 0.15)
+            ),
+            Map.of(
+                "stage_name", "Stage 3: Hourly Filter",
+                "passed", true,
+                "reason", "Demo: hourly confirmation stays inside the risk filter",
+                "data", Map.of("hourly_change_pct", 0.42, "rsi_hourly", 55.1)
+            ),
+            Map.of(
+                "stage_name", "Stage 4: Options Selection",
+                "passed", true,
+                "reason", "Demo: selected option satisfies delta, DTE and liquidity constraints",
+                "data", Map.of("delta", 0.18, "dte", 22, "open_interest", 1450, "bid_ask_spread", 0.032)
+            ),
+            Map.of(
+                "stage_name", "Stage 5: Decision Engine",
+                "passed", true,
+                "reason", "Demo: approved with controlled 16% NAV allocation",
+                "data", Map.of("allocation_nav_pct", 16, "leverage", 2.0, "position_size_usd", positionSize)
+            )
+        ));
         report.put("selected_options", List.of(
                 Map.of(
                     "symbol", asset + "-26JUN26-" + ("ETH".equals(asset) ? "4000" : "70000") + "-C",
@@ -170,14 +182,15 @@ public class DemoDataService {
             - Market state: ranging
             - RSI: 54.8
             - Implied volatility is above realized volatility
-            - Option liquidity is sufficient for the demonstration scenario
+            - Hourly filter confirms that price movement stays inside the demo risk band
+            - Option selection passes delta, DTE and liquidity constraints
 
             ## Selected Structure
 
             - Instrument: %s-26JUN26-%s-C
             - Direction: short volatility / premium collection demo
             - Leverage: 2.0x
-            - Position size: 80%% of NAV
+            - Position size: 16%% of NAV
 
             ## Risk Notes
 
@@ -202,8 +215,8 @@ public class DemoDataService {
             Demo-mode answer for %s.
 
             The system is using prepared market data, so the response is stable for the defense demo.
-            Current demo context: ranging market, positive IV/RV spread, sufficient option liquidity,
-            and an approved limited-risk volatility premium setup. For a real decision, switch DEMO_MODE=false
+            Current demo context: ranging market, positive IV/RV spread, hourly confirmation, option selection,
+            and an approved limited-risk 16%% NAV volatility premium setup. For a real decision, switch DEMO_MODE=false
             and run the Python ATS-service, Bybit access, and Ollama/OpenRouter provider.
             """.formatted(asset);
     }
