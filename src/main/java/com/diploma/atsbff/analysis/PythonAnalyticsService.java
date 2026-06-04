@@ -2,6 +2,7 @@ package com.diploma.atsbff.analysis;
 
 import com.diploma.atsbff.common.ApiException;
 import com.diploma.atsbff.config.AppProperties;
+import com.diploma.atsbff.demo.DemoDataService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,12 +16,24 @@ import org.springframework.web.client.ResourceAccessException;
 public class PythonAnalyticsService {
 
     private final RestClient restClient;
+    private final AppProperties properties;
+    private final DemoDataService demoDataService;
 
-    public PythonAnalyticsService(RestClient.Builder builder, AppProperties properties) {
+    public PythonAnalyticsService(
+        RestClient.Builder builder,
+        AppProperties properties,
+        DemoDataService demoDataService
+    ) {
         this.restClient = builder.baseUrl(properties.getPython().getBaseUrl()).build();
+        this.properties = properties;
+        this.demoDataService = demoDataService;
     }
 
     public JsonNode runAnalysis(AnalysisRequest request) {
+        if (properties.isDemoMode() || request.isDemoMode()) {
+            return demoDataService.analysisJson(request);
+        }
+
         try {
             return restClient.post()
                 .uri("/analyze")
@@ -38,6 +51,10 @@ public class PythonAnalyticsService {
     }
 
     public String runMarkdownAnalysis(AnalysisRequest request) {
+        if (properties.isDemoMode() || request.isDemoMode()) {
+            return demoDataService.markdownReport(request);
+        }
+
         try {
             return restClient.post()
                 .uri("/analyze/markdown")
@@ -62,9 +79,9 @@ public class PythonAnalyticsService {
 
         return new ApiException(
             HttpStatus.BAD_GATEWAY,
-            "Python %s failed with status %d: %s".formatted(
+                "Python %s failed with status %d: %s".formatted(
                 operation,
-                exception.getRawStatusCode(),
+                exception.getStatusCode().value(),
                 detail
             ),
             exception

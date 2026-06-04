@@ -10,6 +10,8 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
 
+    private boolean demoMode = false;
+
     @Valid
     private final Jwt jwt = new Jwt();
 
@@ -24,6 +26,14 @@ public class AppProperties {
 
     @Valid
     private final Ollama ollama = new Ollama();
+
+    public boolean isDemoMode() {
+        return demoMode;
+    }
+
+    public void setDemoMode(boolean demoMode) {
+        this.demoMode = demoMode;
+    }
 
     public Jwt getJwt() {
         return jwt;
