@@ -32,7 +32,7 @@ class PythonAnalyticsServiceTest {
     }
 
     @Test
-    void jsonAnalysisUsesPythonEvenWhenDemoModeIsEnabled() throws Exception {
+    void demoJsonAnalysisReturnsPreparedReportWithoutCallingPython() throws Exception {
         AtomicInteger analysisHits = new AtomicInteger();
         startServer(exchange -> {
             analysisHits.incrementAndGet();
@@ -42,6 +42,24 @@ class PythonAnalyticsServiceTest {
         PythonAnalyticsService service = service(true);
 
         JsonNode response = service.runAnalysis(new AnalysisRequest("BTC", new BigDecimal("100000"), "demo"));
+
+        assertThat(analysisHits).hasValue(0);
+        assertThat(response.path("demo_mode").asBoolean()).isTrue();
+        assertThat(response.path("approved").asBoolean()).isTrue();
+        assertThat(response.path("stage_results")).hasSize(5);
+    }
+
+    @Test
+    void liveJsonAnalysisUsesPythonWhenDemoModeIsDisabled() throws Exception {
+        AtomicInteger analysisHits = new AtomicInteger();
+        startServer(exchange -> {
+            analysisHits.incrementAndGet();
+            send(exchange, 200, "{\"source\":\"python\",\"approved\":true}");
+        });
+
+        PythonAnalyticsService service = service(false);
+
+        JsonNode response = service.runAnalysis(new AnalysisRequest("BTC", new BigDecimal("100000"), "live"));
 
         assertThat(analysisHits).hasValue(1);
         assertThat(response.path("source").asText()).isEqualTo("python");

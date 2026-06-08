@@ -194,8 +194,8 @@ public class DemoDataService {
 
             ## Risk Notes
 
-            This report is generated from prepared demo-data. It is intended for a stable diploma defense flow
-            when Bybit, Python ATS-service, or an LLM provider are unavailable.
+            This report is generated from prepared demo-data for a stable diploma defense flow.
+            Market screens and AI Chat continue to use live backend data and Ollama context.
             """.formatted(
             asset,
             nav.toPlainString(),

@@ -30,6 +30,11 @@ public class PythonAnalyticsService {
     }
 
     public JsonNode runAnalysis(AnalysisRequest request) {
+        if (properties.isDemoMode() || request.isDemoMode()) {
+            pauseBeforeDemoReport();
+            return demoDataService.analysisJson(request);
+        }
+
         try {
             return restClient.post()
                 .uri("/analyze")
@@ -48,7 +53,7 @@ public class PythonAnalyticsService {
 
     public String runMarkdownAnalysis(AnalysisRequest request) {
         if (properties.isDemoMode() || request.isDemoMode()) {
-            pauseBeforeDemoMarkdown();
+            pauseBeforeDemoReport();
             return demoDataService.markdownReport(request);
         }
 
@@ -85,7 +90,7 @@ public class PythonAnalyticsService {
         );
     }
 
-    private void pauseBeforeDemoMarkdown() {
+    private void pauseBeforeDemoReport() {
         try {
             Thread.sleep(1500);
         } catch (InterruptedException exception) {
