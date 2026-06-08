@@ -10,7 +10,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = "app.demo-mode=true")
+@SpringBootTest(properties = {
+    "app.demo-mode=true",
+    "app.python.base-url=http://127.0.0.1:9",
+    "app.bybit.base-url=http://127.0.0.1:9",
+    "app.ollama.base-url=http://127.0.0.1:9"
+})
 @AutoConfigureMockMvc
 class HealthIntegrationTest {
 
@@ -18,14 +23,14 @@ class HealthIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void dependenciesEndpointReturnsDemoStatusesInDemoMode() throws Exception {
+    void dependenciesEndpointChecksRealServicesInDemoMode() throws Exception {
         mockMvc.perform(get("/api/health/dependencies"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("healthy"))
+            .andExpect(jsonPath("$.status").value("degraded"))
             .andExpect(jsonPath("$.demoMode").value(true))
             .andExpect(jsonPath("$.dependencies.bff").value("ok"))
-            .andExpect(jsonPath("$.dependencies.pythonAtsService").value("demo-data"))
-            .andExpect(jsonPath("$.dependencies.bybit").value("demo-data"))
-            .andExpect(jsonPath("$.dependencies.llm").value("demo-data"));
+            .andExpect(jsonPath("$.dependencies.pythonAtsService").value("unavailable"))
+            .andExpect(jsonPath("$.dependencies.bybit").value("unavailable"))
+            .andExpect(jsonPath("$.dependencies.llm").value("unavailable"));
     }
 }

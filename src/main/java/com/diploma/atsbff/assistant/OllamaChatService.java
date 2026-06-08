@@ -2,7 +2,6 @@ package com.diploma.atsbff.assistant;
 
 import com.diploma.atsbff.common.ApiException;
 import com.diploma.atsbff.config.AppProperties;
-import com.diploma.atsbff.demo.DemoDataService;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,23 +17,16 @@ public class OllamaChatService {
 
     private final RestClient restClient;
     private final AppProperties properties;
-    private final DemoDataService demoDataService;
 
     public OllamaChatService(
         RestClient.Builder builder,
-        AppProperties properties,
-        DemoDataService demoDataService
+        AppProperties properties
     ) {
         this.restClient = builder.baseUrl(properties.getOllama().getBaseUrl()).build();
         this.properties = properties;
-        this.demoDataService = demoDataService;
     }
 
     public String chat(List<AssistantMessage> messages, String model) {
-        if (properties.isDemoMode()) {
-            return demoDataService.assistantAnswer(messages);
-        }
-
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("model", model == null || model.isBlank() ? properties.getOllama().getModel() : model);
         request.put("messages", messages);

@@ -2,7 +2,6 @@ package com.diploma.atsbff.market;
 
 import com.diploma.atsbff.common.ApiException;
 import com.diploma.atsbff.config.AppProperties;
-import com.diploma.atsbff.demo.DemoDataService;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,20 +18,12 @@ import org.springframework.web.client.RestClient;
 public class MarketService {
 
     private final RestClient restClient;
-    private final AppProperties properties;
-    private final DemoDataService demoDataService;
 
-    public MarketService(RestClient.Builder builder, AppProperties properties, DemoDataService demoDataService) {
+    public MarketService(RestClient.Builder builder, AppProperties properties) {
         this.restClient = builder.baseUrl(properties.getBybit().getBaseUrl()).build();
-        this.properties = properties;
-        this.demoDataService = demoDataService;
     }
 
     public SpotTickerResponse getSpotTicker(String asset) {
-        if (properties.isDemoMode()) {
-            return demoDataService.spotTicker(asset);
-        }
-
         String symbol = normalizeSpotSymbol(asset);
         JsonNode root = restClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -57,10 +48,6 @@ public class MarketService {
     }
 
     public List<KlineResponse> getKlines(String asset, String interval, int limit) {
-        if (properties.isDemoMode()) {
-            return demoDataService.klines(asset, limit);
-        }
-
         String symbol = normalizeSpotSymbol(asset);
         JsonNode root = restClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -95,10 +82,6 @@ public class MarketService {
     }
 
     public List<OptionsChainResponse> getOptionsChain(String asset, String expDate) {
-        if (properties.isDemoMode()) {
-            return demoDataService.optionsChain(asset);
-        }
-
         String normalizedAsset = normalizeAsset(asset);
         JsonNode root = restClient.get()
             .uri(uriBuilder -> {

@@ -41,19 +41,6 @@ public class HealthController {
         Map<String, String> dependencies = new LinkedHashMap<>();
         dependencies.put("bff", "ok");
 
-        if (properties.isDemoMode()) {
-            dependencies.put("pythonAtsService", "demo-data");
-            dependencies.put("bybit", "demo-data");
-            dependencies.put("llm", "demo-data");
-            return Map.of(
-                "status", "healthy",
-                "service", "ats-bff",
-                "demoMode", true,
-                "dependencies", dependencies,
-                "timestamp", Instant.now().toString()
-            );
-        }
-
         dependencies.put("pythonAtsService", ping(pythonClient, "/health"));
         dependencies.put("bybit", ping(bybitClient, "/v5/market/time"));
         dependencies.put("llm", ping(ollamaClient, "/api/tags"));
@@ -62,7 +49,7 @@ public class HealthController {
         return Map.of(
             "status", degraded ? "degraded" : "healthy",
             "service", "ats-bff",
-            "demoMode", false,
+            "demoMode", properties.isDemoMode(),
             "dependencies", dependencies,
             "timestamp", Instant.now().toString()
         );

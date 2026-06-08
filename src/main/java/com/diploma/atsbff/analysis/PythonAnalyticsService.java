@@ -30,10 +30,6 @@ public class PythonAnalyticsService {
     }
 
     public JsonNode runAnalysis(AnalysisRequest request) {
-        if (properties.isDemoMode() || request.isDemoMode()) {
-            return demoDataService.analysisJson(request);
-        }
-
         try {
             return restClient.post()
                 .uri("/analyze")
@@ -52,6 +48,7 @@ public class PythonAnalyticsService {
 
     public String runMarkdownAnalysis(AnalysisRequest request) {
         if (properties.isDemoMode() || request.isDemoMode()) {
+            pauseBeforeDemoMarkdown();
             return demoDataService.markdownReport(request);
         }
 
@@ -86,5 +83,14 @@ public class PythonAnalyticsService {
             ),
             exception
         );
+    }
+
+    private void pauseBeforeDemoMarkdown() {
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Demo markdown generation was interrupted", exception);
+        }
     }
 }
