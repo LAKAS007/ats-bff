@@ -3,11 +3,14 @@ package com.diploma.atsbff.assistant;
 import com.diploma.atsbff.common.ApiException;
 import com.diploma.atsbff.config.AppProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -22,7 +25,10 @@ public class OllamaChatService {
         RestClient.Builder builder,
         AppProperties properties
     ) {
-        this.restClient = builder.baseUrl(properties.getOllama().getBaseUrl()).build();
+        this.restClient = builder.clone()
+            .baseUrl(properties.getOllama().getBaseUrl())
+            .requestFactory(ollamaRequestFactory())
+            .build();
         this.properties = properties;
     }
 
@@ -49,5 +55,16 @@ public class OllamaChatService {
         } catch (RestClientException exception) {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "Ollama is unavailable", exception);
         }
+    }
+
+    private JdkClientHttpRequestFactory ollamaRequestFactory() {
+        HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(2))
+            .build();
+
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(90));
+        return requestFactory;
     }
 }
